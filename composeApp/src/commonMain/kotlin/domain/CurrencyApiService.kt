@@ -4,6 +4,6 @@ import domain.model.Currency
 
 interface CurrencyApiService {
 
-    fun getLatestExchangeRates(): RequestState<List<Currency>>
+    suspend fun getLatestExchangeRates(): RequestState<List<Currency>>
 
 }
