@@ -19,14 +19,21 @@ class HomeScreen: Screen {
 
         val viewModel = getScreenModel<HomeViewModel>()
         val rateStatus by viewModel.rateStatus
+        val sourceCurrency by viewModel.sourceCurrency
+        val targetCurrency by viewModel.targetCurrency
 
 
         HomeHeader(
             status = rateStatus,
+            source = sourceCurrency,
+            target = targetCurrency,
             onRatesRefresh = {
                 viewModel.sendEvent(
                     HomeUiEvent.RefreshRates
                 )
+            },
+            onSwitchClick = {
+
             }
         )
     }

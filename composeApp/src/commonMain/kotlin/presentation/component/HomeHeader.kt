@@ -2,9 +2,11 @@ package presentation.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,21 +24,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import currencyapp.composeapp.generated.resources.Res
 import currencyapp.composeapp.generated.resources.exchange_illustration
 import currencyapp.composeapp.generated.resources.refresh_ic
+import currencyapp.composeapp.generated.resources.switch_ic
+import domain.RequestState
+import domain.model.Currency
+import domain.model.CurrencyCode
 import domain.model.RateStatus
 import headerColor
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import staleColor
 import util.displayCurrentDateTime
+import kotlin.time.TimeSource
 
 @Composable
 fun HomeHeader(
     status: RateStatus,
-    onRatesRefresh: () -> Unit
+    source: RequestState<Currency>,
+    target: RequestState<Currency>,
+    onRatesRefresh: () -> Unit,
+    onSwitchClick: () -> Unit
 ) {
 
     Column(
@@ -47,10 +60,15 @@ fun HomeHeader(
             .padding(all = 12.dp)
     ) {
         Spacer(modifier = Modifier.height(12.dp))
-
         RatesStatus(
             status = status,
             onRatesRefresh = onRatesRefresh
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        CurrencyInputs(
+            source = source,
+            target = target,
+            onSwitchClick = onSwitchClick
         )
     }
     
@@ -100,4 +118,91 @@ fun RatesStatus(
         }
     }
 
+}
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+fun RowScope.CurrentView(
+    placeholder: String,
+    currency: RequestState<Currency>,
+    onClick: () -> Unit
+) {
+    Column(modifier = Modifier.weight(1f)) {
+        Text(
+            modifier = Modifier.padding(start = 12.dp),
+            text = placeholder,
+            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(size = 8.dp))
+                .background(Color.White.copy(alpha = 0.5f))
+                .height(54.dp)
+                .clickable { onClick() },
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ){
+            if (currency.isSuccess()){
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    painter = painterResource(
+                        CurrencyCode.valueOf(
+                            currency.getSuccessData().code
+                        ).flag
+                    ),
+                    tint = Color.Unspecified,
+                    contentDescription = "Country Flag"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = CurrencyCode.valueOf(currency.getSuccessData().code).name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    color = Color.White
+                )
+            }
+
+
+        }
+    }
+    
+}
+
+@OptIn(ExperimentalResourceApi::class)
+@Composable
+fun CurrencyInputs(
+    source: RequestState<Currency>,
+    target: RequestState<Currency>,
+    onSwitchClick: () -> Unit
+) {
+    Row (
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        CurrentView(
+            placeholder = "from",
+            currency = source,
+            onClick = {}
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        IconButton(
+            modifier = Modifier.padding(top = 24.dp),
+            onClick = onSwitchClick
+        ){
+            Icon(
+                painter = painterResource(Res.drawable.switch_ic),
+                contentDescription = "Switch Icon",
+                tint = Color.White
+            )
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        CurrentView(
+            placeholder = "to",
+            currency = target,
+            onClick = {}
+        )
+    }
 }
