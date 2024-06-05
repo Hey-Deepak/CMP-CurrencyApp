@@ -9,21 +9,19 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import data.remote.api.CurrencyApiServiceImpl
 import kotlinx.coroutines.launch
+import presentation.component.HomeHeader
 
 class HomeScreen: Screen {
     @Composable
     override fun Content() {
         val scope = rememberCoroutineScope()
 
-        Button(
-            onClick = {
-                scope.launch {
-                    CurrencyApiServiceImpl().getLatestExchangeRates()
-                }
+        HomeHeader(
+            status = ,
+            onRatesRefresh = {
+
             }
-        ){
-            Text("Click me")
-        }
+        )
     }
 
 
