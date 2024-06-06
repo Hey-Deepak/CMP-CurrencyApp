@@ -39,7 +39,9 @@ class HomeScreen: Screen {
                 )
             },
             onSwitchClick = {
-
+                viewModel.sendEvent(
+                    HomeUiEvent.SwitchCurrencies
+                )
             }
         )
     }

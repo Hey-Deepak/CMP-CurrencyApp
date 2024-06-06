@@ -12,13 +12,16 @@ import domain.PreferencesRepository
 import domain.RequestState
 import domain.model.Currency
 import domain.model.RateStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
 
 sealed class HomeUiEvent {
-    data object RefreshRates : HomeUiEvent()
+    data object RefreshRates: HomeUiEvent()
+    data object SwitchCurrencies: HomeUiEvent()
 }
 
 class HomeViewModel(
@@ -33,7 +36,7 @@ class HomeViewModel(
     private var _sourceCurrency: MutableState<RequestState<Currency>> = mutableStateOf(RequestState.Idle)
     val sourceCurrency: State<RequestState<Currency>> = _sourceCurrency
 
-    private var _targetCurrency = mutableStateOf(RequestState.Idle)
+    private var _targetCurrency: MutableState<RequestState<Currency>> = mutableStateOf(RequestState.Idle)
     val targetCurrency: State<RequestState<Currency>> = _targetCurrency
 
     private var _allCurrency = mutableStateListOf<Currency>()
@@ -42,6 +45,35 @@ class HomeViewModel(
     init {
         screenModelScope.launch {
             fetchNewRates()
+            readSourceCurrency()
+            readTargetCurrency()
+        }
+    }
+
+    private fun readSourceCurrency() {
+        screenModelScope.launch(Dispatchers.Main) {
+            preferences.readSourceCurrencyCode().collectLatest { currencyCode ->
+                val selectedCurrency = _allCurrency.find { it.code == currencyCode.name }
+                if (selectedCurrency != null) {
+                    _sourceCurrency.value = RequestState.Success(data = selectedCurrency)
+                } else {
+                    _sourceCurrency.value =
+                        RequestState.Error(message = "Couldn't find the selected currency.")
+                }
+            }
+        }
+    }
+
+    private fun readTargetCurrency(){
+        screenModelScope.launch (Dispatchers.Main){
+            preferences.readTargetCurrencyCode().collectLatest { currencyCode ->
+                val selectedCurrency = _allCurrency.find { it.code == currencyCode.name }
+                if(selectedCurrency != null){
+                    _targetCurrency.value = RequestState.Success(data = selectedCurrency)
+                } else {
+                    _targetCurrency.value = RequestState.Error(message = "Couldn't find the selected currency.")
+                }
+            }
         }
     }
 
@@ -89,8 +121,20 @@ class HomeViewModel(
                     fetchNewRates()
                 }
             }
+
+            HomeUiEvent.SwitchCurrencies -> {
+                switchCurrencies()
+            }
         }
     }
+
+    private fun switchCurrencies() {
+        val source = _sourceCurrency.value
+        val target = _targetCurrency.value
+        _sourceCurrency.value = target
+        _targetCurrency.value = source
+    }
+
     private suspend fun getRateStatus() {
         _rateStatus.value = if (preferences.isDataFresh(
                 currentTimestamp = Clock.System.now().toEpochMilliseconds()
