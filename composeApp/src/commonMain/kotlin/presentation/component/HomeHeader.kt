@@ -1,6 +1,8 @@
 package presentation.component
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,10 +26,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.TextStyle
@@ -39,6 +46,7 @@ import currencyapp.composeapp.generated.resources.Res
 import currencyapp.composeapp.generated.resources.exchange_illustration
 import currencyapp.composeapp.generated.resources.refresh_ic
 import currencyapp.composeapp.generated.resources.switch_ic
+import domain.DisplayResult
 import domain.RequestState
 import domain.model.Currency
 import domain.model.CurrencyCode
@@ -86,7 +94,7 @@ fun HomeHeader(
             onAmountChange = onAmountChange
         )
     }
-    
+
 }
 
 @OptIn(ExperimentalResourceApi::class)
@@ -121,8 +129,8 @@ fun RatesStatus(
             }
         }
 
-        if (status == RateStatus.Stale){
-            IconButton(onClick = onRatesRefresh){
+        if (status == RateStatus.Stale) {
+            IconButton(onClick = onRatesRefresh) {
                 Icon(
                     modifier = Modifier.size(24.dp),
                     painter = painterResource(Res.drawable.refresh_ic),
@@ -159,31 +167,30 @@ fun RowScope.CurrentView(
                 .clickable { onClick() },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
-        ){
-            if (currency.isSuccess()){
-                Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(
-                        CurrencyCode.valueOf(
-                            currency.getSuccessData().code
-                        ).flag
-                    ),
-                    tint = Color.Unspecified,
-                    contentDescription = "Country Flag"
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = CurrencyCode.valueOf(currency.getSuccessData().code).name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    color = Color.White
-                )
-            }
-
+        ) {
+           currency.DisplayResult(
+               onSuccess = { data ->
+                   Icon(
+                       modifier = Modifier.size(24.dp),
+                       painter = painterResource(
+                           CurrencyCode.valueOf(data.code).flag
+                       ),
+                       tint = Color.Unspecified,
+                       contentDescription = "Country Flag"
+                   )
+                   Spacer(modifier = Modifier.width(8.dp))
+                   Text(
+                       text = CurrencyCode.valueOf(data.code).name,
+                       fontWeight = FontWeight.Bold,
+                       fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                       color = Color.White
+                   )
+               }
+           )
 
         }
     }
-    
+
 }
 
 @OptIn(ExperimentalResourceApi::class)
@@ -193,10 +200,17 @@ fun CurrencyInputs(
     target: RequestState<Currency>,
     onSwitchClick: () -> Unit
 ) {
-    Row (
+
+    var animationStarted by remember { mutableStateOf(false) }
+    val animatiedRotation by animateFloatAsState(
+        targetValue = if (animationStarted) 180f else 0f,
+        animationSpec = tween(durationMillis = 500)
+    )
+
+    Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
-    ){
+    ) {
         CurrentView(
             placeholder = "from",
             currency = source,
@@ -204,9 +218,16 @@ fun CurrencyInputs(
         )
         Spacer(modifier = Modifier.height(14.dp))
         IconButton(
-            modifier = Modifier.padding(top = 24.dp),
-            onClick = onSwitchClick
-        ){
+            modifier = Modifier
+                .padding(top = 24.dp)
+                .graphicsLayer {
+                    rotationY = animatiedRotation
+                },
+            onClick = {
+                animationStarted = !animationStarted
+                onSwitchClick()
+            }
+        ) {
             Icon(
                 painter = painterResource(Res.drawable.switch_ic),
                 contentDescription = "Switch Icon",
@@ -234,7 +255,7 @@ fun AmountInput(
             .animateContentSize()
             .height(54.dp),
         value = "$amount",
-        onValueChange = { onAmountChange(it.toDouble())},
+        onValueChange = { onAmountChange(it.toDouble()) },
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.White.copy(alpha = 0.05f),
             unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
