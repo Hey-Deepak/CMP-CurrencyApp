@@ -34,6 +34,7 @@ import domain.model.Currency
 import domain.model.CurrencyType
 import headerColor
 import util.DoubleConverter
+import util.GetBebasFontFamily
 import util.calculateExchangeRate
 import util.convert
 
@@ -65,8 +66,8 @@ fun HomeBody(
             Text(
                 modifier = Modifier.fillMaxWidth(),
                 text = "${(animatedExchangeAmount * 100).toLong() / 100.0}",
-                fontSize = MaterialTheme.typography.displaySmall.fontSize,
-                fontWeight = FontWeight.Bold,
+                fontSize = 60.sp,
+                //fontFamily = GetBebasFontFamily(),
                 color = if (isSystemInDarkTheme()) Color.White else Color.Black,
                 textAlign = TextAlign.Center
             )

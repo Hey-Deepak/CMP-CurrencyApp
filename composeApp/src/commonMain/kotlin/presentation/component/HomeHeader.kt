@@ -52,6 +52,7 @@ import domain.model.Currency
 import domain.model.CurrencyCode
 import domain.model.CurrencyType
 import domain.model.RateStatus
+import getPlatform
 import headerColor
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -77,6 +78,7 @@ fun HomeHeader(
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
             .background(headerColor)
+            .padding(top = if (getPlatform().name == "Android") 0.dp else 24.dp)
             .padding(all = 12.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))

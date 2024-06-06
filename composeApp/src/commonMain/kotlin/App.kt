@@ -9,8 +9,6 @@ import presentation.screen.HomeScreen
 @Preview
 fun App() {
 
-    initializeKoin()
-
     MaterialTheme {
         Navigator(HomeScreen())
     }
