@@ -86,6 +86,7 @@ class HomeViewModel(
             if (localCache.isSuccess()){
                 mongoDB.cleanUp()
                 if (localCache.getSuccessData().isNotEmpty()){
+                    _allCurrency.clear()
                     _allCurrency.addAll(localCache.getSuccessData())
                     if (!preferences.isDataFresh(Clock.System.now().toEpochMilliseconds())){
                         cacheTheData()
@@ -111,6 +112,7 @@ class HomeViewModel(
             fetchedData.getSuccessData().forEach {
                 mongoDB.insertCurrencyData(it)
             }
+            _allCurrency.clear()
             _allCurrency.addAll(fetchedData.getSuccessData())
         } else if (fetchedData.isError()) {
             error("Fetching Failed")
