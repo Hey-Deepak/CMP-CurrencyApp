@@ -167,7 +167,7 @@ fun RowScope.CurrentView(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(size = 8.dp))
-                .background(Color.White.copy(alpha = 0.5f))
+                .background(Color.White.copy(alpha = 0.05f))
                 .height(54.dp)
                 .clickable { onClick() },
             verticalAlignment = Alignment.CenterVertically,
